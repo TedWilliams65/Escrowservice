@@ -96,3 +96,19 @@
         (err ERR_UNAUTHORIZED)
       )
     (err ERR_NOT_FOUND)))
+
+    ;; Refund buyer if deadline passed and no release
+(define-public (refund (escrow-id uint))
+  (match (map-get escrows {escrow-id: escrow-id})
+    escrow =>
+      (if (and (is-eq tx-sender (get buyer escrow))
+               (> block-height (get deadline escrow))
+               (not (get is-released escrow)))
+        (begin
+          (map-set escrows {escrow-id: escrow-id} (merge escrow {is-released: true}))
+          ;; Refund logic here
+          (ok true)
+        )
+        (err ERR_DEADLINE)
+      )
+    (err ERR_NOT_FOUND)))
