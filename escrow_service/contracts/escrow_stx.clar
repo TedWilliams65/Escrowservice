@@ -81,3 +81,18 @@
         (err ERR_UNAUTHORIZED)
       )
     (err ERR_NOT_FOUND)))
+
+    ;; Resolve dispute
+(define-public (resolve-dispute (escrow-id uint) (winner principal))
+  (match (map-get escrows {escrow-id: escrow-id})
+    escrow =>
+      (if (is-eq tx-sender (default-to none (get arbiter escrow)))
+        (begin
+          ;; Distribute funds based on arbiter's decision
+          (map-set escrows {escrow-id: escrow-id} (merge escrow {is-released: true is-disputed: false}))
+          ;; Add transfer logic
+          (ok winner)
+        )
+        (err ERR_UNAUTHORIZED)
+      )
+    (err ERR_NOT_FOUND)))
